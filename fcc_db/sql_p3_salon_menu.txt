@@ -1,0 +1,57 @@
+#!/bin/bash
+q='psql --username=freecodecamp --dbname=salon --no-align --tuples-only -c'
+servs=$($q "SELECT * FROM services;")
+arr_id=()
+arr_name=()
+while IFS='|' read -r serv_id serv_name _; do #input field separator
+  serv_id="$(echo -e "${serv_id}" | tr -d '[:space:]')" #trim space
+  serv_name="$(echo -e "${serv_name}" | tr -d '[:space:]')"
+  if [[ $serv_id =~ ^[0-9]+$ ]]; then #contains only number
+    arr_id+=("$serv_id")
+    arr_name+=("$serv_name")
+  fi
+done <<< "$servs" #end of input
+f_main() {
+  if [[ $# > 0 ]]; then
+    echo $1
+  fi
+  # print options
+  for i in "${!arr_id[@]}"; do
+    echo -e "${arr_id[i]}) ${arr_name[i]}"
+  done
+
+  read SERVICE_ID_SELECTED
+  for i in "${!arr_id[@]}"; do
+    if [[ "$SERVICE_ID_SELECTED" == "${arr_id[i]}" ]]; then
+      service_SELECTed=${arr_name[i]}
+      flag_service=found
+      echo "Your phone number:"
+      read CUSTOMER_PHONE
+      #check if it is in db
+      customers=$($q "SELECT * FROM customers;")
+      while IFS='|' read -r c_id phone name _; do
+        phone="$(echo -e "${phone}" | tr -d '[:space:]')"
+        c_id="$(echo -e "${c_id}" | tr -d '[:space:]')"
+        name="$(echo -e "${name}" | tr -d '[:space:]')"
+        if [[ "$CUSTOMER_PHONE" == "$phone" ]]; then
+          CUSTOMER_NAME=$name
+          flag_custom='found'
+        fi
+      done <<< $customers
+      if [[ "$flag_custom" != "found" ]]; then
+        echo "Your name:"
+        read CUSTOMER_NAME
+        _=$($q "INSERT INTO customers(phone,name) VALUES('$CUSTOMER_PHONE', '$CUSTOMER_NAME');")
+      fi
+      c_id=$($q "SELECT customer_id FROM customers WHERE phone = '$CUSTOMER_PHONE' limit 1;")
+      echo "Time?"
+      read SERVICE_TIME
+      echo "I have put you down for a $service_SELECTed at $SERVICE_TIME, $CUSTOMER_NAME."
+      _=$($q "INSERT INTO appointments(customer_id,service_id,time) VALUES('$c_id', '$SERVICE_ID_SELECTED','$SERVICE_TIME');")
+    fi
+  done
+  if [[ "$flag_service" != "found" ]]; then
+    f_main "Don't you see the options?"
+  fi
+}
+f_main

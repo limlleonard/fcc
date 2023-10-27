@@ -1,0 +1,56 @@
+#!/bin/bash
+q="psql --username=freecodecamp --dbname=number_guess -t --no-align -c"
+tb=$($q "SELECT * FROM guess;")
+echo $tb
+# get the user name, with the proper length
+echo "Enter your username:"
+read name
+len1=${#name}
+if (( len1>22 )) ; then
+  name=${name:0:22}
+fi
+#if the user is in database
+rt=$($q "SELECT * FROM guess WHERE name='$name';")
+if [[ $rt ]] ; then
+  played=$(echo "$rt" | awk -F'|' '{print $2}')
+  best=$(echo "$rt" | awk -F'|' '{print $3}')
+  echo -e "Welcome back, $name! You have played $played games, and your best game took $best guesses."
+else
+  echo "Welcome, $name! It looks like this is your first time here."
+  played=0
+  best=1000
+fi
+# start game
+rdm=$((RANDOM % (1 - 1000 + 1) + 1))
+echo "Guess the secret number between 1 and 1000:"
+# loop to get an intege
+re='^[0-9]+$'
+counter=0
+while true ; do
+  (( counter++ ))
+  echo "$counter try to find $rdm:"
+  read g1
+  if [[ "$g1" =~ $re ]] ; then
+    # loop to get the correct answer
+    if (( g1 < rdm )) ; then
+      echo "It's higher than that, guess again:"
+    elif (( g1 > rdm )); then
+      echo "It's lower than that, guess again:"
+    else 
+      break
+    fi
+  else
+    echo "That is not an integer, guess again:"
+  fi
+done
+echo "You guessed it in $counter tries. The secret number was $rdm. Nice job!"
+# update database
+(( ++played ))
+if (( counter<best )); then
+  best=$counter
+fi
+if ((played == 1 )); then
+  _=$($q "INSERT INTO guess(name,played,best) VALUES('$name',$played,$best);")
+else
+  _=$($q "UPDATE guess SET played = $played, best = $best WHERE name='$name';")
+fi

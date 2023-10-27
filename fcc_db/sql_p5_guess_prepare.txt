@@ -1,0 +1,13 @@
+#!/bin/bash
+q="psql --username=freecodecamp --dbname=number_guess -t --no-align -c"
+mkdir number_guessing_game
+touch number_guessing_game/number_guess.sh
+chmod +x number_guessing_game/number_guess.sh
+
+_=$($q "CREATE TABLE guess();")
+_=$($q "ALTER TABLE guess ADD COLUMN name VARCHAR(22) NOT NULL;")
+_=$($q "ALTER TABLE guess ADD COLUMN played int DEFAULT 0;")
+_=$($q "ALTER TABLE guess ADD COLUMN best int DEFAULT 0;")
+
+# _=$($q "INSERT INTO guess(name) VALUES('leonard');")
+# _=$($q "INSERT INTO guess(name) VALUES('anna');")

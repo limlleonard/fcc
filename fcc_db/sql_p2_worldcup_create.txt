@@ -1,0 +1,15 @@
+#!/bin/bash
+q='psql --username=freecodecamp --dbname=worldcup'
+v1=$($q -c "CREATE TABLE teams();")
+v1=$($q -c "CREATE TABLE games();")
+v1=$($q -c "ALTER TABLE teams ADD COLUMN team_id SERIAL PRIMARY KEY NOT NULL,
+ADD COLUMN name VARCHAR(20) UNIQUE NOT NULL;")
+v1=$($q -c "ALTER TABLE games ADD COLUMN game_id SERIAL PRIMARY KEY NOT NULL,
+ADD COLUMN year INT NOT NULL,
+ADD COLUMN round VARCHAR(20) NOT NULL,
+ADD COLUMN winner_id INT NOT NULL,
+ADD COLUMN opponent_id INT NOT NULL,
+ADD COLUMN winner_goals INT NOT NULL,
+ADD COLUMN opponent_goals INT NOT NULL;")
+v1=$($q -c "ALTER TABLE games ADD FOREIGN KEY(winner_id) REFERENCES teams(team_id),
+ADD FOREIGN KEY(opponent_id) REFERENCES teams(team_id);")

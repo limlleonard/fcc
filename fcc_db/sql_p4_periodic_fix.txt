@@ -1,0 +1,40 @@
+#!/bin/bash
+q="psql --username=freecodecamp --dbname=periodic_TABLE -t --no-align -c" # 
+_=$($q "ALTER TABLE properties rename COLUMN weight to atomic_mass;")
+_=$($q "ALTER TABLE properties rename COLUMN melting_point to melting_point_celsius ;")
+_=$($q "ALTER TABLE properties rename COLUMN boiling_point to boiling_point_celsius ;")
+_=$($q "ALTER TABLE properties ALTER COLUMN boiling_point_celsius set NOT NULL;")
+_=$($q "ALTER TABLE properties ALTER COLUMN melting_point_celsius set NOT NULL;")
+_=$($q "ALTER TABLE elements ADD UNIQUE (symbol, name);")
+_=$($q "ALTER TABLE elements ALTER COLUMN name set NOT NULL;")
+_=$($q "ALTER TABLE elements ALTER COLUMN symbol set NOT NULL;")
+_=$($q "ALTER TABLE properties ADD foreign key(atomic_number) references elements(atomic_number);")
+_=$($q "CREATE TABLE types();")
+_=$($q "ALTER TABLE types ADD COLUMN type_id int PRIMARY KEY;")
+_=$($q "ALTER TABLE types ADD COLUMN type VARCHAR(20) NOT NULL;")
+
+a1=$($q "SELECT distinct type FROM properties")
+arr1=($a1)
+for i in "${!arr1[@]}"; do
+  _=$($q "INSERT INTO types(type_id,type) VALUES($(($i+1)), '${arr1[$i]}');")
+done
+_=$($q "ALTER TABLE properties ADD COLUMN type_id int;")
+for i in "${!arr1[@]}"; do
+  _=$($q "UPDATE properties SET type_id=$(($i+1)) WHERE type='${arr1[$i]}';")
+done
+_=$($q "ALTER TABLE properties ALTER COLUMN type_id set NOT NULL;")
+_=$($q "ALTER TABLE properties ADD foreign key(type_id) references types(type_id);")
+
+_=$($q "update elements set symbol=INITCAP(symbol);")
+_=$($q "ALTER TABLE properties ADD COLUMN am decimal;")
+_=$($q "UPDATE properties SET am = atomic_mass::decimal;")
+_=$($q "UPDATE properties SET am = trim(trailing '0' FROM am::text)::numeric;")
+_=$($q "ALTER TABLE properties DROP COLUMN atomic_mass;")
+_=$($q "ALTER TABLE properties RENAME COLUMN am TO atomic_mass;")
+_=$($q "INSERT INTO elements(atomic_number, symbol, name) VALUES(9,'F','Fluorine'),(10,'Ne','Neon');")
+_=$($q "INSERT INTO properties(atomic_number, type, melting_point_celsius, boiling_point_celsius, type_id, atomic_mass) VALUES(9,'nonmetal',-220,-188.1,3,18.998),(10,'nonmetal',-248.6,-246.1,3,20.18);")
+
+
+_=$($q "DELETE FROM properties WHERE atomic_number=1000;")
+_=$($q "DELETE FROM elements WHERE atomic_number=1000;")
+_=$($q "ALTER TABLE properties DROP COLUMN type;")

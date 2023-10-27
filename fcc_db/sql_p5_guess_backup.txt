@@ -1,0 +1,45 @@
+#!/bin/bash
+q="psql --username=freecodecamp --dbname=number_guess -t --no-align -c"
+# tb=$($q "SELECT * FROM g2;")
+# echo $tb
+re='^[0-9]+$'
+# get the user name, with the proper length
+echo "Enter your username:"
+read name
+len1=${#name}
+if (( len1>22 )) ; then
+  name=${name:0:22}
+fi
+#if the user is in database
+played=$($q "SELECT count(*) as ct FROM g2 WHERE name='$name';")
+if (( played>0 )) ; then
+  best=$($q "SELECT min(tries) as mt FROM g2 WHERE name='$name';")
+  echo -e "Welcome back, $name! You have played $played games, and your best game took $best guesses."
+else
+  echo "Welcome, $name! It looks like this is your first time here."
+fi
+# start game
+rdm=$((RANDOM % (1 - 1000 + 1) + 1))
+echo "Guess the secret number between 1 and 1000:"
+# loop to get an intege
+counter=0
+while true ; do
+  (( counter++ ))
+  #echo "$counter try to find $rdm:"
+  read g1
+  if [[ "$g1" =~ $re ]] ; then
+    # loop to get the correct answer
+    if (( g1 < rdm )) ; then
+      echo "It's higher than that, guess again:"
+    elif (( g1 > rdm )); then
+      echo "It's lower than that, guess again:"
+    else 
+      break
+    fi
+  else
+    echo "That is not an integer, guess again:"
+  fi
+done
+# update database
+_=$($q "INSERT INTO g2(name,tries) VALUES('$name',$counter);")
+echo -e "You guessed it in $counter tries. The secret number was $rdm. Nice job!"

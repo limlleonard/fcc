@@ -1,0 +1,34 @@
+#! /bin/bash
+if [[ $1 == "test" ]]
+then
+  PSQL="psql --username=postgres --dbname=worldcuptest -t --no-align -c"
+else
+  PSQL="psql --username=freecodecamp --dbname=worldcup -t --no-align -c"
+fi
+# Do not change code above this line. Use the PSQL variable above to query your database.
+f_ADD () { #insert teams
+  eval a1=$1 #because of space in a string, otherwise treated as 2 vars
+  t_id=$($PSQL "SELECT team_id FROM teams WHERE name='$a1'")  
+  if [[ -z $t_id ]] 
+  then insert=$($PSQL "INSERT INTO teams(name) VALUES('$a1')")
+  fi
+}
+f_nm2id () { #FROM team name to team id
+  eval a1=$1
+  t_id=$($PSQL "SELECT team_id FROM teams WHERE name='$a1'")
+  return $t_id
+}
+cat games.csv | while IFS="," read y rnd t1 t2 g1 g2 #sed -n 1,10p #stream edit, first 10 rows #
+do
+  if [ "$t1" = winner ]; then continue #skip the title row
+  fi
+  f_ADD \$t1
+  f_ADD \$t2
+  f_nm2id \$t1
+  id1=$?
+  f_nm2id \$t2
+  id2=$?
+  v11=$($PSQL "INSERT INTO games(year, round, winner_id, opponent_id, winner_goals, opponent_goals) VALUES($y,'$rnd',$id1,$id2,$g1,$g2);")
+  # echo "VALUES($y,$rnd,$id1,$id2,$g1,$g2)"
+  # echo $y, $rnd, $g1, $g2
+done

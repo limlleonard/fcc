@@ -1,0 +1,27 @@
+#!/bin/bash
+q="psql --username=freecodecamp --dbname=periodic_TABLE -t --no-align -c" # 
+nf='I could not find that element in the database.' #not found
+re='^[0-9]+$'
+if ! [ -z "$1" ] ; then #if there is an input
+  if [[ "$1" =~ $re ]] ; then #if the input is a number
+  an=$($q "SELECT atomic_number FROM elements WHERE atomic_number=$1;")
+  else
+  an=$($q "SELECT atomic_number FROM elements WHERE symbol='$1' or name='$1';")
+  fi
+
+  if ! [ -z "$an" ] ; then #if element found
+    nm=$($q "SELECT name FROM elements WHERE atomic_number=$an;")
+    sb=$($q "SELECT symbol FROM elements WHERE atomic_number=$an;")
+    prop=$($q "SELECT melting_point_celsius, boiling_point_celsius, atomic_mass FROM properties WHERE atomic_number=$an;")
+    mp=$(echo "$prop" | awk -F'|' '{print $1}') #named after people, 
+    bp=$(echo "$prop" | awk -F'|' '{print $2}')
+    am=$(echo "$prop" | awk -F'|' '{print $3}')
+    tpid=$($q "SELECT type_id FROM properties WHERE atomic_number=$an;")
+    tp=$($q "SELECT type FROM types WHERE type_id in (SELECT type_id FROM properties WHERE atomic_number=$an);")
+    echo -e "The element with atomic number $an is $nm ($sb). It's a $tp, with a mass of $am amu. $nm has a melting point of $mp celsius and a boiling point of $bp celsius."
+  else
+    echo $nf
+  fi
+else
+  echo -e "Please provide an element as an argument."
+fi

@@ -1,0 +1,21 @@
+#!/bin/bash
+q='psql --username=freecodecamp --dbname=salon'
+
+v1=$($q -c "CREATE TABLE customers();")
+v2=$($q -c "CREATE TABLE appointments();")
+v3=$($q -c "CREATE TABLE services();")
+v1=$($q -c "ALTER TABLE customers ADD COLUMN customer_id SERIAL PRIMARY KEY;")
+v2=$($q -c "ALTER TABLE appointments ADD COLUMN appointment_id SERIAL PRIMARY KEY;")
+v3=$($q -c "ALTER TABLE services ADD COLUMN service_id SERIAL PRIMARY KEY;")
+
+v1=$($q -c "ALTER TABLE appointments ADD COLUMN customer_id int;")
+v2=$($q -c "ALTER TABLE appointments ADD foreign key(customer_id) references customers(customer_id);")
+v3=$($q -c "ALTER TABLE appointments ADD COLUMN service_id int;")
+v4=$($q -c "ALTER TABLE appointments ADD foreign key(service_id) references services(service_id);")
+
+v1=$($q -c "ALTER TABLE customers ADD COLUMN phone VARCHAR(20) UNIQUE;")
+v2=$($q -c "ALTER TABLE customers ADD COLUMN name VARCHAR(20);")
+v3=$($q -c "ALTER TABLE services ADD COLUMN name VARCHAR(20);")
+v4=$($q -c "ALTER TABLE appointments ADD COLUMN time VARCHAR(20);")
+
+v1=$($q -c "INSERT INTO services(name) VALUES('cut'), ('color'), ('style');")

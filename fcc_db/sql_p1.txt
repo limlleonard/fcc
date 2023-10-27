@@ -1,0 +1,45 @@
+#!/bin/bash
+q='psql --username=freecodecamp --dbname=universe'
+lst_tb=(galaxy star planet moon) #list of TABLE
+id1="${tb}_id"
+
+for tb in "${lst_tb[@]}"; do
+  _=$($q -c "CREATE TABLE $tb();")
+  _=$($q -c "ALTER TABLE $tb ADD COLUMN ${tb}_id SERIAL PRIMARY KEY;")
+  _=$($q -c "ALTER TABLE $tb ADD COLUMN name VARCHAR(20)")
+  _=$($q -c "ALTER TABLE $tb ADD UNIQUE (name);")
+  _=$($q -c "ALTER TABLE $tb ALTER COLUMN name SET NOT NULL;")
+  _=$($q -c "ALTER TABLE $tb ADD COLUMN c1 BOOLEAN NOT NULL DEFAULT true;")
+  _=$($q -c "ALTER TABLE $tb ADD COLUMN c2 BOOLEAN;")
+  _=$($q -c "ALTER TABLE $tb ADD COLUMN c3 BOOLEAN;")
+  _=$($q -c "ALTER TABLE $tb ADD COLUMN c4 BOOLEAN;")
+done
+
+for ((i=0; i < ${#lst_tb[@]}-1; i++)); do
+  _=$($q -c "ALTER TABLE ${lst_tb[i+1]} ADD COLUMN ${lst_tb[i]}_id INT;")
+  _=$($q -c "ALTER TABLE ${lst_tb[i+1]} ADD FOREIGN KEY(${lst_tb[i]}_id) REFERENCES ${lst_tb[i]}(${lst_tb[i]}_id);")
+done
+
+_=$($q -c "ALTER TABLE planet 
+ADD COLUMN distance INT,
+ADD COLUMN temperature INT,
+ADD COLUMN size NUMERIC(5,1),
+ADD COLUMN dexcribe TEXT,
+ADD COLUMN water BOOLEAN DEFAULT FALSE,
+ADD COLUMN life BOOLEAN DEFAULT FALSE;")
+
+_=$($q -c "CREATE TABLE test1()")
+_=$($q -c "ALTER TABLE test1 ADD COLUMN test1_id SERIAL PRIMARY KEY")
+_=$($q -c "ALTER TABLE test1 ADD COLUMN name VARCHAR(20)")
+_=$($q -c "ALTER TABLE test1 ADD COLUMN c1 INT UNIQUE NOT NULL;")
+_=$($q -c "ALTER TABLE galaxy DROP COLUMN c1 ;")
+_=$($q -c "INSERT INTO test1(name,c1) VALUES('r1', 1), ('r2', 2),('r3',3);")
+
+for i in $(seq 1 20);
+do
+  v1=$($q -c "INSERT INTO galaxy(name) VALUES('g$i');")
+  v1=$($q -c "INSERT INTO star(name, galaxy_id) VALUES('s$i',1);")
+  v1=$($q -c "INSERT INTO planet(name, star_id) VALUES('p$i', 1);")
+  v1=$($q -c "INSERT INTO moon(name, planet_id) VALUES('p$i', 1);")
+done
+v1=$($q -c "INSERT INTO star(name, galaxy_id) VALUES('star2', 1);")
